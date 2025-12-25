@@ -2,11 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
     <title>Nano Lens</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      /* Custom Scrollbar for a cleaner look */
+      /* Prevent browser zoom and improve mobile feel */
+      html, body {
+        touch-action: manipulation;
+        overscroll-behavior: none;
+      }
+      /* Custom Scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;

@@ -122,7 +122,7 @@ export default function App() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Ensure capture matches the mirrored preview for front camera
+    // Match the mirrored preview if in user mode
     if (facingMode === 'user') {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
