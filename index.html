@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -37,12 +38,19 @@
     "react/": "https://esm.sh/react@^19.2.3/",
     "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
     "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-    "jspdf": "https://esm.sh/jspdf@2.5.1"
+    "jspdf": "https://esm.sh/jspdf@2.5.1",
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
+</script>
+<script>
+  // Ensure 'process' is defined for browser environments
+  window.process = window.process || { env: {} };
 </script>
 </head>
   <body class="bg-zinc-950 text-zinc-100 antialiased overflow-x-hidden selection:bg-indigo-500 selection:text-white">
     <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>
