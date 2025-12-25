@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, Sparkles, Send, X, Download, RotateCcw, Image as ImageIcon, Video, History, ChevronLeft, Trash2, Share2, FileText, User, Github, Linkedin, Code, ZoomIn, Play, Pause, Wand2, Box, Mic, MessageSquare, Scan, CheckCircle2, ShieldCheck, ExternalLink } from 'lucide-react';
+import { Camera, Upload, Sparkles, Send, X, Download, RotateCcw, Image as ImageIcon, Video, History, ChevronLeft, Trash2, Share2, FileText, User, Github, Linkedin, Code, ZoomIn, Play, Pause, Wand2, Box, Mic, MessageSquare, Scan, CheckCircle2, ShieldCheck, ExternalLink, RefreshCw } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import { analyzeImage, editImage, analyzeVideo, generalChat } from './services/geminiService';
 import { AppState, ImageFile, EditResult, CaptureMode, HistoryItem } from './types';
@@ -16,15 +15,9 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-const AI_PRESETS = [
-  { label: "Elite Enhance", prompt: "Perform a high-end professional enhancement. Adjust lighting, clarity, and dynamic range to studio standards." },
-  { label: "Neural Clarity", prompt: "Identify all key objects and sharpen their details while reducing background noise for a clean aesthetic." },
-  { label: "Cinematic Mood", prompt: "Apply a professional cinematic color grade and lighting style similar to high-budget photography." }
-];
-
 export default function App() {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
-  const [captureMode, setCaptureMode] = useState<CaptureMode>(CaptureMode.PHOTO);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [currentFile, setCurrentFile] = useState<ImageFile | null>(null);
   const [editPrompt, setEditPrompt] = useState("");
   const [generalPrompt, setGeneralPrompt] = useState("");
@@ -34,7 +27,6 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showDeveloper, setShowDeveloper] = useState(false);
   const [cameraError, setCameraError] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [maxZoom, setMaxZoom] = useState(1);
   const [supportsZoom, setSupportsZoom] = useState(false);
@@ -43,9 +35,6 @@ export default function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoTrackRef = useRef<MediaStreamTrack | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('nanoLensHistoryV5');
@@ -63,15 +52,24 @@ export default function App() {
   useEffect(() => {
     let stream: MediaStream | null = null;
     const startCamera = async () => {
-      if (appState !== AppState.IDLE && appState !== AppState.RECORDING) return;
+      if (appState !== AppState.IDLE) return;
       try {
         setCameraError(false);
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
-          audio: true 
-        });
+        const constraints = {
+          video: { 
+            facingMode: facingMode,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: false 
+        };
+        
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-        if (videoRef.current) videoRef.current.srcObject = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        
         const track = stream.getVideoTracks()[0];
         videoTrackRef.current = track;
         
@@ -82,13 +80,27 @@ export default function App() {
              setSupportsZoom(true);
              setMaxZoom(capabilities.zoom.max);
              setZoom(capabilities.zoom.min || 1);
+           } else {
+             setSupportsZoom(false);
            }
         }
-      } catch (err) { setCameraError(true); }
+      } catch (err) { 
+        console.error("Camera access failed:", err);
+        setCameraError(true); 
+      }
     };
-    if (appState === AppState.IDLE) startCamera();
-    return () => stream?.getTracks().forEach(t => t.stop());
-  }, [appState]);
+    
+    startCamera();
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, [appState, facingMode]);
+
+  const toggleCamera = () => {
+    setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
+  };
 
   const handleZoomChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newZoom = parseFloat(e.target.value);
@@ -256,21 +268,28 @@ export default function App() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-black">
               <ShieldCheck className="w-16 h-16 text-zinc-900 mb-8" />
-              <button onClick={() => fileInputRef.current?.click()} className="px-10 py-4 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Import Visual Stream</button>
+              <button onClick={() => window.location.reload()} className="px-10 py-4 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Retry Access</button>
             </div>
+          )}
+
+          {/* Camera Switch Button - Bottom Right */}
+          {!cameraError && appState === AppState.IDLE && (
+            <button 
+              onClick={toggleCamera} 
+              className="absolute bottom-10 right-10 z-30 p-6 bg-black/40 backdrop-blur-3xl rounded-full border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90 shadow-[0_0_30px_rgba(0,0,0,0.5)] group"
+            >
+              <RefreshCw className="w-6 h-6 group-active:rotate-180 transition-transform duration-500" />
+            </button>
           )}
 
           {/* High-Impact HUD Frame */}
           {!cameraError && appState === AppState.IDLE && (
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
               <div className="w-64 h-64 border border-white/10 rounded-[3rem] relative mb-24 animate-[pulseScale_4s_infinite_ease-in-out]">
-                {/* HUD Corners - Cleaner and Brighter */}
                 <div className="absolute top-0 left-0 w-10 h-10 border-t-[4px] border-l-[4px] border-white rounded-tl-[1.5rem] shadow-[0_0_20px_rgba(255,255,255,0.4)]"></div>
                 <div className="absolute top-0 right-0 w-10 h-10 border-t-[4px] border-r-[4px] border-white rounded-tr-[1.5rem] shadow-[0_0_20px_rgba(255,255,255,0.4)]"></div>
                 <div className="absolute bottom-0 left-0 w-10 h-10 border-b-[4px] border-l-[4px] border-white rounded-bl-[1.5rem] shadow-[0_0_20px_rgba(255,255,255,0.4)]"></div>
                 <div className="absolute bottom-0 right-0 w-10 h-10 border-b-[4px] border-r-[4px] border-white rounded-br-[1.5rem] shadow-[0_0_20px_rgba(255,255,255,0.4)]"></div>
-                
-                {/* Horizontal Precision Scan */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[scan_3.5s_ease-in-out_infinite]"></div>
               </div>
             </div>
@@ -280,14 +299,13 @@ export default function App() {
           <div className="absolute top-0 left-0 right-0 p-8 z-20 flex justify-between items-center max-w-lg mx-auto w-full">
             <button onClick={() => setShowHistory(true)} className="p-5 bg-black/40 backdrop-blur-3xl rounded-3xl border border-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90 shadow-2xl"><History className="w-6 h-6" /></button>
             <div className="px-4 py-2 bg-black/40 backdrop-blur-3xl rounded-full border border-white/10">
-               <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em]">Hardware: <span className="text-white/60">Active</span></span>
+               <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em]">Hardware: <span className="text-white/60">{facingMode === 'environment' ? 'Rear' : 'Front'}</span></span>
             </div>
             <button onClick={() => setShowDeveloper(true)} className="p-5 bg-black/40 backdrop-blur-3xl rounded-3xl border border-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90 shadow-2xl"><User className="w-6 h-6" /></button>
           </div>
 
           {/* Precise Controls at Bottom */}
           <div className="absolute bottom-0 left-0 right-0 pb-16 pt-32 flex flex-col items-center z-20 bg-gradient-to-t from-black via-black/30 to-transparent">
-             {/* Dynamic Hint - Transparent and pulsing, no overlap */}
              <div className="mb-8 opacity-40 animate-[pulseFade_3s_infinite]">
                 <span className="text-[10px] font-black text-white uppercase tracking-[0.5em] drop-shadow-lg">Capture to Analyze</span>
              </div>
@@ -302,7 +320,6 @@ export default function App() {
              <div className="flex items-center gap-12">
                <button onClick={() => fileInputRef.current?.click()} className="p-7 bg-white/5 backdrop-blur-3xl rounded-[2rem] border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all active:scale-90"><ImageIcon className="w-7 h-7" /></button>
                
-               {/* Impactful Premium Shutter */}
                <button onClick={capturePhoto} className="relative h-28 w-28 group transition-transform active:scale-95">
                  <div className="absolute inset-0 rounded-full border-[2px] border-white/10 scale-125 group-hover:scale-150 transition-all duration-1000 opacity-0 group-hover:opacity-100"></div>
                  <div className="absolute inset-0 rounded-full border-[3px] border-white/20 scale-110 group-hover:scale-125 transition-all duration-700 shadow-[0_0_30px_rgba(255,255,255,0.2)]"></div>
@@ -421,7 +438,6 @@ export default function App() {
                 </p>
               </div>
               
-              {/* "Cooler" stylized buttons with high-pro styling */}
               <div className="grid grid-cols-2 gap-4">
                 <a href="https://github.com/gforg5" target="_blank" rel="noreferrer" 
                    className="group/btn flex items-center justify-center gap-3 py-4 bg-zinc-800/80 rounded-2xl text-[10px] font-black uppercase text-white hover:bg-white hover:text-black transition-all shadow-xl border border-white/5 active:scale-95">
