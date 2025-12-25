@@ -17,7 +17,8 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  // Defaulting to user (front camera) as requested
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [currentFile, setCurrentFile] = useState<ImageFile | null>(null);
   const [editPrompt, setEditPrompt] = useState("");
   const [generalPrompt, setGeneralPrompt] = useState("");
@@ -57,9 +58,9 @@ export default function App() {
         setCameraError(false);
         const constraints = {
           video: { 
-            facingMode: facingMode,
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
+            facingMode: { ideal: facingMode },
+            width: { ideal: 1280 }, // Using a slightly more common ideal for broad mobile support
+            height: { ideal: 720 }
           },
           audio: false 
         };
@@ -122,7 +123,7 @@ export default function App() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Match the mirrored preview if in user mode
+    // Ensure capture matches the mirrored preview for front camera
     if (facingMode === 'user') {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
@@ -304,7 +305,7 @@ export default function App() {
           <div className="absolute top-0 left-0 right-0 p-5 sm:p-8 z-20 flex justify-between items-center max-w-lg mx-auto w-full">
             <button onClick={() => setShowHistory(true)} className="p-4 sm:p-5 bg-black/40 backdrop-blur-3xl rounded-3xl border border-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90 shadow-2xl"><History className="w-5 h-5 sm:w-6 sm:h-6" /></button>
             
-            {/* Integrated flip functionality into the hardware badge */}
+            {/* Integrated flip functionality into the hardware badge - No redundancy */}
             <div className="px-5 py-2.5 bg-black/40 backdrop-blur-3xl rounded-full border border-white/10 cursor-pointer active:scale-95 transition-all flex items-center gap-3 group" onClick={toggleCamera}>
                <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.4em] group-hover:text-white transition-colors">Cam: <span className="text-white/80">{facingMode === 'environment' ? 'Rear' : 'Front'}</span></span>
                <RefreshCw className="w-3 h-3 text-indigo-500/60 group-hover:rotate-180 transition-transform duration-700" />
@@ -455,7 +456,7 @@ export default function App() {
                 </a>
                 <a href="https://www.linkedin.com/in/sayedmohsinali/" target="_blank" rel="noreferrer" 
                    className="group/btn flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 bg-zinc-800/80 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] font-black uppercase text-white hover:bg-[#0077b5] border border-white/5 transition-all shadow-xl active:scale-95">
-                   <Linkedin className="w-3 h-3 sm:w-4 sm:h-4 group-hover/btn:scale-110 transition-transform" /> 
+                   <Linkedin className="w-3 h-3 sm:w-4 h-4 group-hover/btn:scale-110 transition-transform" /> 
                    <span>Linkedin</span>
                 </a>
               </div>
