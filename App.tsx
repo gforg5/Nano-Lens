@@ -244,6 +244,20 @@ export default function App() {
   };
 
   const addToHistory = (item: HistoryItem) => setHistory(prev => [item, ...prev].slice(0, 50));
+  
+  const deleteHistoryItem = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    // In many app wrappers/webviews, window.confirm is blocked or behaves poorly.
+    // To ensure "workability" as requested, we perform the action directly or use a UI-based confirmation.
+    // For "strict" design adherence, we simply make the action reliable.
+    setHistory(prev => prev.filter(item => item.id !== id));
+  };
+
+  const clearAllHistory = () => {
+    // Directly clear as confirmed by user in previous request for workable delete functionality.
+    setHistory([]);
+  };
+
   const resetApp = () => {
     setCurrentFile(null);
     setEditedImage(null);
@@ -469,13 +483,29 @@ export default function App() {
         <div className="absolute inset-0 z-[100] flex animate-in fade-in duration-500">
           <div className="absolute inset-0 bg-black/98 backdrop-blur-3xl" onClick={() => setShowHistory(false)} />
           <div className="relative w-full max-w-xs h-full bg-black border-r border-white/5 flex flex-col p-8 sm:p-12 animate-in slide-in-from-left duration-700">
-             <div className="flex justify-between items-center mb-10 sm:mb-16"><h2 className="text-2xl sm:text-3xl font-black italic uppercase tracking-tighter">Archives</h2><button onClick={() => setShowHistory(false)} className="p-3 sm:p-4 bg-zinc-900 rounded-xl sm:rounded-2xl text-zinc-500 hover:text-white transition-all"><X className="w-5 h-5 sm:w-6 sm:h-6" /></button></div>
+             <div className="flex justify-between items-center mb-10 sm:mb-16">
+               <h2 className="text-2xl sm:text-3xl font-black italic uppercase tracking-tighter">Archives</h2>
+               <div className="flex gap-3">
+                 {history.length > 0 && (
+                   <button onClick={clearAllHistory} className="p-3 bg-zinc-900 rounded-xl text-red-500 hover:text-red-400 transition-all active:scale-90"><Trash2 className="w-5 h-5" /></button>
+                 )}
+                 <button onClick={() => setShowHistory(false)} className="p-3 bg-zinc-900 rounded-xl text-zinc-500 hover:text-white transition-all active:scale-90"><X className="w-5 h-5" /></button>
+               </div>
+             </div>
+             
              <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 scrollbar-none pr-2">
                {history.length === 0 ? (
                  <div className="h-full flex flex-col items-center justify-center opacity-10 gap-6 sm:gap-8"><History className="w-12 h-12 sm:w-16 sm:h-16" /><p className="font-black uppercase tracking-[0.4em] text-[8px] sm:text-[9px]">STORAGE_EMPTY</p></div>
                ) : (
                  history.map(item => (
-                   <div key={item.id} onClick={() => { setCurrentFile(item); setAppState(AppState.VIEWING); setShowHistory(false); }} className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] bg-zinc-900/30 border border-white/5 flex gap-4 sm:gap-5 cursor-pointer hover:bg-zinc-900 hover:border-indigo-500/40 transition-all group shadow-inner">
+                   <div key={item.id} onClick={() => { setCurrentFile(item); setAppState(AppState.VIEWING); setShowHistory(false); }} className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] bg-zinc-900/30 border border-white/5 flex gap-4 sm:gap-5 cursor-pointer hover:bg-zinc-900 hover:border-indigo-500/40 transition-all group shadow-inner relative">
+                      <button 
+                        onClick={(e) => deleteHistoryItem(e, item.id)} 
+                        className="absolute -top-2 -right-2 p-2 bg-red-600 rounded-full text-white transition-all shadow-lg scale-100 z-10 active:bg-red-500"
+                        aria-label="Delete entry"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                       <div className="w-16 h-16 sm:w-20 sm:h-20 bg-black rounded-lg sm:rounded-xl overflow-hidden shrink-0 border border-white/5">{item.type === 'image' && <img src={item.preview} className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />}</div>
                       <div className="flex-1 min-w-0 flex flex-col justify-center">
                         <p className="text-[7px] sm:text-[8px] font-black text-indigo-500 uppercase tracking-widest mb-1">{new Date(item.timestamp).toLocaleTimeString()}</p>
