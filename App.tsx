@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, Sparkles, Send, X, Download, RotateCcw, Image as ImageIcon, Video, History, ChevronLeft, Trash2, Share2, FileText, User, Github, Linkedin, Code, ZoomIn, Play, Pause, Wand2, Box, Mic, MessageSquare, Scan, CheckCircle2, ShieldCheck, ExternalLink, RefreshCw } from 'lucide-react';
+import { Camera, Upload, Sparkles, Send, X, Download, RotateCcw, Image as ImageIcon, Video, History, ChevronLeft, Trash2, Share2, FileText, User, Github, Linkedin, Code, ZoomIn, Play, Pause, Wand2, Box, Mic, MessageSquare, Scan, CheckCircle2, ShieldCheck, ExternalLink, RefreshCw, Zap } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import { analyzeImage, editImage, analyzeVideo, generalChat } from './services/geminiService';
 import { AppState, ImageFile, EditResult, CaptureMode, HistoryItem } from './types';
@@ -15,9 +15,15 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
+const BrandLogo = () => (
+  <svg width="24" height="24" viewBox="0 0 100 100" className="sm:w-8 sm:h-8 drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]">
+    <path d="M35 15 C 60 15, 80 30, 80 50 C 80 70, 60 85, 35 85 C 50 75, 60 65, 60 50 C 60 35, 50 25, 35 15 Z" fill="#f97316" />
+    <path d="M50 25 C 65 25, 75 35, 75 50 C 75 65, 65 75, 50 75 C 58 68, 63 60, 63 50 C 63 40, 58 32, 50 25 Z" fill="#fdba74" opacity="0.6" />
+  </svg>
+);
+
 export default function App() {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
-  // Defaulting to user (front camera) as requested
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [currentFile, setCurrentFile] = useState<ImageFile | null>(null);
   const [editPrompt, setEditPrompt] = useState("");
@@ -59,7 +65,7 @@ export default function App() {
         const constraints = {
           video: { 
             facingMode: { ideal: facingMode },
-            width: { ideal: 1280 }, // Using a slightly more common ideal for broad mobile support
+            width: { ideal: 1280 },
             height: { ideal: 720 }
           },
           audio: false 
@@ -123,7 +129,6 @@ export default function App() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Ensure capture matches the mirrored preview for front camera
     if (facingMode === 'user') {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
@@ -247,14 +252,10 @@ export default function App() {
   
   const deleteHistoryItem = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    // In many app wrappers/webviews, window.confirm is blocked or behaves poorly.
-    // To ensure "workability" as requested, we perform the action directly or use a UI-based confirmation.
-    // For "strict" design adherence, we simply make the action reliable.
     setHistory(prev => prev.filter(item => item.id !== id));
   };
 
   const clearAllHistory = () => {
-    // Directly clear as confirmed by user in previous request for workable delete functionality.
     setHistory([]);
   };
 
@@ -280,7 +281,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 font-sans overflow-hidden relative selection:bg-indigo-500">
+    <div className="min-h-screen bg-black text-zinc-100 font-sans overflow-hidden relative selection:bg-orange-500">
       {appState === AppState.ANALYZING && <LoadingOverlay message="Analyzing..." />}
       {appState === AppState.EDITING && <LoadingOverlay message="Synchronizing Synapses..." />}
 
@@ -310,30 +311,33 @@ export default function App() {
                 <div className="absolute top-0 right-0 w-10 h-10 border-t-[4px] border-r-[4px] border-white rounded-tr-[1.5rem] shadow-[0_0_20px_rgba(255,255,255,0.4)]"></div>
                 <div className="absolute bottom-0 left-0 w-10 h-10 border-b-[4px] border-l-[4px] border-white rounded-bl-[1.5rem] shadow-[0_0_20px_rgba(255,255,255,0.4)]"></div>
                 <div className="absolute bottom-0 right-0 w-10 h-10 border-b-[4px] border-r-[4px] border-white rounded-br-[1.5rem] shadow-[0_0_20px_rgba(255,255,255,0.4)]"></div>
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[scan_3.5s_ease-in-out_infinite]"></div>
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-500/40 to-transparent animate-[scan_3.5s_ease-in-out_infinite]"></div>
               </div>
             </div>
           )}
 
           {/* Top Control Cluster */}
-          <div className="absolute top-0 left-0 right-0 p-5 sm:p-8 z-20 flex justify-between items-center max-w-lg mx-auto w-full">
-            <button onClick={() => setShowHistory(true)} className="p-4 sm:p-5 bg-black/40 backdrop-blur-3xl rounded-3xl border border-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90 shadow-2xl"><History className="w-5 h-5 sm:w-6 sm:h-6" /></button>
-            
-            {/* Integrated flip functionality into the hardware badge - No redundancy */}
-            <div className="px-5 py-2.5 bg-black/40 backdrop-blur-3xl rounded-full border border-white/10 cursor-pointer active:scale-95 transition-all flex items-center gap-3 group" onClick={toggleCamera}>
-               <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.4em] group-hover:text-white transition-colors">Cam: <span className="text-white/80">{facingMode === 'environment' ? 'Rear' : 'Front'}</span></span>
-               <RefreshCw className="w-3 h-3 text-indigo-500/60 group-hover:rotate-180 transition-transform duration-700" />
+          <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 z-20 flex justify-between items-center w-full bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
+            <div className="flex items-center gap-3 sm:gap-4 px-4 py-2 bg-black/40 backdrop-blur-3xl rounded-2xl border border-white/5 shadow-2xl">
+              <div className="flex items-center gap-2">
+                <BrandLogo />
+                <span className="text-xs sm:text-sm font-black tracking-tighter uppercase italic">Nano Lens</span>
+              </div>
+              <div className="w-px h-4 bg-white/10"></div>
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-orange-400 fill-orange-400/20" />
+                <span className="text-[10px] sm:text-xs font-bold text-zinc-400 tracking-tight">FAST CV</span>
+              </div>
             </div>
-
-            <button onClick={() => setShowDeveloper(true)} className="p-4 sm:p-5 bg-black/40 backdrop-blur-3xl rounded-3xl border border-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90 shadow-2xl"><User className="w-5 h-5 sm:w-6 sm:h-6" /></button>
+            
+            <div className="flex gap-2">
+              <button onClick={() => setShowHistory(true)} className="p-3 sm:p-4 bg-black/60 backdrop-blur-3xl rounded-2xl border border-white/10 text-white/60 hover:text-white transition-all active:scale-90 shadow-2xl"><History className="w-5 h-5" /></button>
+              <button onClick={() => setShowDeveloper(true)} className="p-3 sm:p-4 bg-black/60 backdrop-blur-3xl rounded-2xl border border-white/10 text-white/60 hover:text-white transition-all active:scale-90 shadow-2xl"><User className="w-5 h-5" /></button>
+            </div>
           </div>
 
           {/* Precise Controls at Bottom */}
           <div className="absolute bottom-0 left-0 right-0 pb-10 sm:pb-16 pt-32 flex flex-col items-center z-20 bg-gradient-to-t from-black via-black/40 to-transparent">
-             <div className="mb-6 sm:mb-8 opacity-40 animate-[pulseFade_3s_infinite]">
-                <span className="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-[0.5em] drop-shadow-lg">Capture Visual</span>
-             </div>
-
              {supportsZoom && appState === AppState.IDLE && (
                <div className="flex flex-col items-center gap-4 bg-black/40 backdrop-blur-3xl px-10 py-5 sm:px-12 sm:py-6 rounded-[2.5rem] border border-white/5 shadow-2xl mb-8 sm:mb-10 transition-all group">
                  <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.5em] group-hover:text-white transition-colors">Digital Zoom: <span className="text-white/80">{zoom.toFixed(1)}x</span></div>
@@ -353,7 +357,9 @@ export default function App() {
                  </div>
                </button>
 
-               <button onClick={resetApp} className="p-5 sm:p-7 bg-white/5 backdrop-blur-3xl rounded-[2rem] border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all active:scale-90"><RotateCcw className="w-6 h-6 sm:w-7 sm:h-7" /></button>
+               <button onClick={toggleCamera} className="p-5 sm:p-7 bg-white/5 backdrop-blur-3xl rounded-[2rem] border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all active:scale-90">
+                 <RotateCcw className="w-6 h-6 sm:w-7 sm:h-7" />
+               </button>
              </div>
           </div>
         </div>
@@ -363,12 +369,19 @@ export default function App() {
       {(appState === AppState.VIEWING || appState === AppState.EDITING || appState === AppState.ANALYZING) && currentFile && (
         <div className="flex flex-col h-screen w-full bg-black relative z-40 animate-in slide-in-from-bottom duration-700">
           <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/5 bg-black/80 backdrop-blur-3xl sticky top-0 z-50">
-            <button onClick={resetApp} className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-white font-black text-[8px] sm:text-[9px] uppercase tracking-widest transition-all shadow-xl">
-              <X className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" /> New Scan
-            </button>
+            <div className="flex items-center gap-3 sm:gap-4 px-4 py-2 bg-zinc-900/50 rounded-2xl border border-white/5">
+              <BrandLogo />
+              <div className="flex flex-col">
+                <span className="text-xs font-black tracking-tighter uppercase italic leading-none">Nano Lens</span>
+                <span className="text-[7px] font-black text-orange-500 tracking-[0.3em] uppercase">Visual Hub</span>
+              </div>
+              <div className="w-px h-5 bg-white/10 ml-1"></div>
+              <button onClick={resetApp} className="p-1 text-red-500 hover:text-red-400 transition-colors ml-1"><X className="w-4 h-4" /></button>
+            </div>
+            
             <div className="flex gap-2 sm:gap-3">
                <button onClick={handleShare} className="p-3 sm:p-4 bg-zinc-900 rounded-2xl border border-white/5 text-zinc-400 hover:text-white shadow-xl transition-all"><Share2 className="w-4 h-4 sm:w-5 sm:h-5" /></button>
-               <button onClick={downloadProfessionalPdf} className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-[8px] sm:text-[9px] uppercase tracking-widest shadow-2xl border border-indigo-400 transition-all">
+               <button onClick={downloadProfessionalPdf} className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-2xl font-black text-[8px] sm:text-[9px] uppercase tracking-widest shadow-2xl border border-orange-400 transition-all">
                  <Download className="w-4 h-4 sm:w-5 sm:h-5" /> Export PDF
                </button>
             </div>
@@ -376,7 +389,7 @@ export default function App() {
 
           <div className="flex-1 overflow-y-auto pb-64 sm:pb-80 scrollbar-none">
             <div className="w-full bg-black relative flex justify-center items-center py-6 sm:py-10 border-b border-white/5 overflow-hidden">
-              <div className="absolute inset-0 bg-indigo-500/5 blur-[120px] rounded-full scale-150 animate-pulse"></div>
+              <div className="absolute inset-0 bg-orange-500/5 blur-[120px] rounded-full scale-150 animate-pulse"></div>
               <div className="relative inline-block max-w-[94%] sm:max-w-[92%] z-10">
                 <img src={editedImage || currentFile.preview} className="max-h-[46vh] sm:max-h-[52vh] rounded-[2rem] sm:rounded-[2.5rem] object-contain block shadow-[0_0_80px_rgba(0,0,0,1)] border border-white/10" />
                 <div className="absolute inset-0">{renderBoundingBoxes()}</div>
@@ -385,7 +398,7 @@ export default function App() {
 
             <div className="p-6 sm:p-10 max-w-2xl mx-auto space-y-10 sm:space-y-16">
               <div className="flex items-center gap-4 sm:gap-6">
-                 <div className="h-10 sm:h-14 w-1.5 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-700 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
+                 <div className="h-10 sm:h-14 w-1.5 rounded-full bg-gradient-to-b from-orange-400 to-orange-700 shadow-[0_0_15px_rgba(249,115,22,0.5)]"></div>
                  <div>
                    <h3 className="text-3xl sm:text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Elite Analysis</h3>
                    <p className="text-[8px] sm:text-[10px] font-black text-zinc-600 uppercase tracking-widest">Neural Logic Architecture v5.0</p>
@@ -394,8 +407,8 @@ export default function App() {
               
               <div className="grid gap-4 sm:gap-6">
                  {currentFile.analysis?.points?.map((p, i) => (
-                   <div key={i} className="flex gap-5 sm:gap-8 p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] bg-zinc-900/30 border border-white/5 hover:bg-zinc-900/50 hover:border-indigo-500/30 transition-all duration-700 group shadow-2xl">
-                     <span className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 flex items-center justify-center rounded-xl sm:rounded-2xl bg-zinc-950 text-indigo-400 border border-white/5 font-black text-lg sm:text-xl shadow-inner group-hover:bg-indigo-600 group-hover:text-white transition-all">{i+1}</span>
+                   <div key={i} className="flex gap-5 sm:gap-8 p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] bg-zinc-900/30 border border-white/5 hover:bg-zinc-900/50 hover:border-orange-500/30 transition-all duration-700 group shadow-2xl">
+                     <span className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 flex items-center justify-center rounded-xl sm:rounded-2xl bg-zinc-950 text-orange-400 border border-white/5 font-black text-lg sm:text-xl shadow-inner group-hover:bg-orange-600 group-hover:text-white transition-all">{i+1}</span>
                      <p className="text-zinc-200 font-bold leading-relaxed pt-2 sm:pt-3 text-base sm:text-lg italic tracking-tight">{p}</p>
                    </div>
                  ))}
@@ -406,9 +419,9 @@ export default function App() {
                   <h4 className="text-[8px] sm:text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] flex items-center gap-3"> Intelligence Synapse Log</h4>
                   <div className="space-y-4 sm:space-y-6">
                     {currentFile.generalChat.map((msg, i) => (
-                      <div key={i} className={`p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border ${msg.role === 'user' ? 'bg-indigo-600/5 border-indigo-500/20 ml-6 sm:ml-12' : 'bg-zinc-900/50 border-white/5 mr-6 sm:mr-12 shadow-inner relative'}`}>
-                        {msg.role === 'model' && <div className="absolute -left-2 sm:-left-3 top-1/2 -translate-y-1/2 w-1 h-8 sm:h-12 bg-indigo-500 rounded-full blur-[2px]"></div>}
-                        <span className={`text-[7px] sm:text-[8px] font-black uppercase tracking-widest block mb-2 sm:mb-4 ${msg.role === 'user' ? 'text-indigo-400' : 'text-zinc-500'}`}>{msg.role.toUpperCase()}</span>
+                      <div key={i} className={`p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border ${msg.role === 'user' ? 'bg-orange-600/5 border-orange-500/20 ml-6 sm:ml-12' : 'bg-zinc-900/50 border-white/5 mr-6 sm:mr-12 shadow-inner relative'}`}>
+                        {msg.role === 'model' && <div className="absolute -left-2 sm:-left-3 top-1/2 -translate-y-1/2 w-1 h-8 sm:h-12 bg-orange-500 rounded-full blur-[2px]"></div>}
+                        <span className={`text-[7px] sm:text-[8px] font-black uppercase tracking-widest block mb-2 sm:mb-4 ${msg.role === 'user' ? 'text-orange-400' : 'text-zinc-500'}`}>{msg.role.toUpperCase()}</span>
                         <p className="text-zinc-200 font-medium leading-relaxed sm:leading-loose text-sm sm:text-base">{msg.text}</p>
                       </div>
                     ))}
@@ -425,7 +438,7 @@ export default function App() {
                  <button onClick={() => setActiveAi('transform')} className={`px-6 sm:px-10 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-widest transition-all ${activeAi === 'transform' ? 'bg-white text-black shadow-xl' : 'text-zinc-500 hover:text-white'}`}>AI RECONSTRUCT</button>
                </div>
 
-               <div className="relative flex items-center bg-zinc-900/80 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 px-2 sm:px-4 shadow-2xl focus-within:border-indigo-500 transition-all">
+               <div className="relative flex items-center bg-zinc-900/80 rounded-[2rem] sm:rounded-[2.5rem] border border-white/5 px-2 sm:px-4 shadow-2xl focus-within:border-orange-500 transition-all">
                  <input type="text" value={activeAi === 'chat' ? generalPrompt : editPrompt} 
                         onChange={(e) => activeAi === 'chat' ? setGeneralPrompt(e.target.value) : setEditPrompt(e.target.value)} 
                         placeholder={activeAi === 'chat' ? "Inquire visual data..." : "Neural transformation parameters..."} 
@@ -443,18 +456,18 @@ export default function App() {
         <div className="absolute inset-0 z-[110] flex items-center justify-center p-6 sm:p-8 animate-in zoom-in-95 duration-500">
            <div className="absolute inset-0 bg-black/98 backdrop-blur-[40px]" onClick={() => setShowDeveloper(false)} />
            <div className="relative bg-zinc-900/40 border border-white/10 rounded-[3rem] sm:rounded-[4rem] p-8 sm:p-12 max-w-sm w-full text-center shadow-[0_0_100px_rgba(0,0,0,1)] group overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500/40 to-transparent"></div>
               <button onClick={() => setShowDeveloper(false)} className="absolute top-6 sm:top-8 right-6 sm:right-8 text-zinc-600 hover:text-white transition-all active:scale-90"><X className="w-5 h-5 sm:w-6 sm:h-6" /></button>
               
               <div className="relative mb-6 sm:mb-8 inline-block">
-                <div className="absolute -inset-6 sm:-inset-8 bg-indigo-500 rounded-full blur-3xl opacity-10 animate-pulse"></div>
+                <div className="absolute -inset-6 sm:-inset-8 bg-orange-500 rounded-full blur-3xl opacity-10 animate-pulse"></div>
                 <img src="https://raw.githubusercontent.com/gforg5/nanolens/main/myimg.jpg" 
                      onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1556157382-97eda2d62296?fit=crop&w=300&h=300&q=80" }} 
                      className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full mx-auto border-[4px] sm:border-[5px] border-zinc-900 shadow-2xl object-cover hover:scale-105 transition-transform duration-700" />
               </div>
               
               <h2 className="text-xl sm:text-2xl font-black italic tracking-tighter uppercase mb-1 drop-shadow-lg">Sayed Mohsin Ali</h2>
-              <p className="text-indigo-400 font-black tracking-[0.4em] text-[8px] sm:text-[9px] uppercase mb-6 sm:mb-8">Systems Developer</p>
+              <p className="text-orange-400 font-black tracking-[0.4em] text-[8px] sm:text-[9px] uppercase mb-6 sm:mb-8">Systems Developer</p>
               
               <div className="bg-black/50 p-5 sm:p-7 rounded-[2rem] sm:rounded-[2.5rem] mb-8 sm:mb-10 border border-white/5 shadow-inner">
                 <p className="text-zinc-400 text-[10px] sm:text-[12px] leading-relaxed font-medium italic">
@@ -465,7 +478,7 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <a href="https://github.com/gforg5" target="_blank" rel="noreferrer" 
                    className="group/btn flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 bg-zinc-800/80 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] font-black uppercase text-white hover:bg-white hover:text-black transition-all shadow-xl border border-white/5 active:scale-95">
-                   <Github className="w-3 h-3 sm:w-4 sm:h-4 group-hover/btn:scale-110 transition-transform" /> 
+                   <Github className="w-3 h-3 sm:w-4 h-4 group-hover/btn:scale-110 transition-transform" /> 
                    <span>Github</span>
                 </a>
                 <a href="https://www.linkedin.com/in/sayedmohsinali/" target="_blank" rel="noreferrer" 
@@ -498,7 +511,7 @@ export default function App() {
                  <div className="h-full flex flex-col items-center justify-center opacity-10 gap-6 sm:gap-8"><History className="w-12 h-12 sm:w-16 sm:h-16" /><p className="font-black uppercase tracking-[0.4em] text-[8px] sm:text-[9px]">STORAGE_EMPTY</p></div>
                ) : (
                  history.map(item => (
-                   <div key={item.id} onClick={() => { setCurrentFile(item); setAppState(AppState.VIEWING); setShowHistory(false); }} className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] bg-zinc-900/30 border border-white/5 flex gap-4 sm:gap-5 cursor-pointer hover:bg-zinc-900 hover:border-indigo-500/40 transition-all group shadow-inner relative">
+                   <div key={item.id} onClick={() => { setCurrentFile(item); setAppState(AppState.VIEWING); setShowHistory(false); }} className="p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] bg-zinc-900/30 border border-white/5 flex gap-4 sm:gap-5 cursor-pointer hover:bg-zinc-900 hover:border-orange-500/40 transition-all group shadow-inner relative">
                       <button 
                         onClick={(e) => deleteHistoryItem(e, item.id)} 
                         className="absolute -top-2 -right-2 p-2 bg-red-600 rounded-full text-white transition-all shadow-lg scale-100 z-10 active:bg-red-500"
@@ -508,7 +521,7 @@ export default function App() {
                       </button>
                       <div className="w-16 h-16 sm:w-20 sm:h-20 bg-black rounded-lg sm:rounded-xl overflow-hidden shrink-0 border border-white/5">{item.type === 'image' && <img src={item.preview} className="w-full h-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />}</div>
                       <div className="flex-1 min-w-0 flex flex-col justify-center">
-                        <p className="text-[7px] sm:text-[8px] font-black text-indigo-500 uppercase tracking-widest mb-1">{new Date(item.timestamp).toLocaleTimeString()}</p>
+                        <p className="text-[7px] sm:text-[8px] font-black text-orange-500 uppercase tracking-widest mb-1">{new Date(item.timestamp).toLocaleTimeString()}</p>
                         <p className="text-[10px] sm:text-[12px] font-bold truncate text-zinc-500 group-hover:text-white transition-colors">{item.analysis?.points?.[0] || "Neural Log"}</p>
                       </div>
                    </div>
