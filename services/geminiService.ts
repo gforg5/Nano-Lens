@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { AnalysisResult, EditResult } from "../types";
+import { AnalysisResult, EditResult, GroundingLink } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -39,23 +39,43 @@ export const analyzeImage = async (base64Data: string, mimeType: string): Promis
       contents: {
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Analyze this image. 1. Provide 3 interesting observations. 2. Identify major objects and return their normalized bounding box coordinates [ymin, xmin, ymax, xmax] in 0-1000 range." }
+          { text: "Analyze this image and use Google Search to verify any specific items or locations. 1. Provide 3 interesting, grounded observations. 2. Identify major objects and return their normalized bounding box coordinates [ymin, xmin, ymax, xmax] in 0-1000 range." }
         ]
       },
       config: {
+        tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
         responseSchema: ANALYSIS_SCHEMA
       }
     });
 
     const json = JSON.parse(response.text || "{}");
+    
+    // Extract grounding links from metadata
+    const groundingLinks: GroundingLink[] = [];
+    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+    if (chunks) {
+      chunks.forEach((chunk: any) => {
+        if (chunk.web && chunk.web.uri) {
+          groundingLinks.push({
+            uri: chunk.web.uri,
+            title: chunk.web.title || "Web Reference"
+          });
+        }
+      });
+    }
+
     return {
       points: json.points || ["Analysis available", "Visual confirmed", "Processing complete"],
-      detectedObjects: json.detectedObjects || []
+      detectedObjects: json.detectedObjects || [],
+      groundingLinks: groundingLinks.length > 0 ? groundingLinks : undefined
     };
   } catch (error) {
     console.error("Analysis failed:", error);
-    return { points: ["Analysis error occurred.", "Please verify your connection.", "Try again with a clearer shot."], detectedObjects: [] };
+    return { 
+      points: ["Analysis error occurred.", "Please verify your connection.", "Try again with a clearer shot."], 
+      detectedObjects: [] 
+    };
   }
 };
 

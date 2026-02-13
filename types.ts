@@ -4,10 +4,16 @@ export interface DetectedObject {
   box_2d: [number, number, number, number]; // [ymin, xmin, ymax, xmax]
 }
 
+export interface GroundingLink {
+  uri: string;
+  title: string;
+}
+
 export interface AnalysisResult {
   description?: string;
   points?: string[]; // For the 1, 2, 3 bullet points
   detectedObjects?: DetectedObject[];
+  groundingLinks?: GroundingLink[];
 }
 
 export interface EditResult {

@@ -17,7 +17,6 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
-  // Defaulting to user (front camera) as requested
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [currentFile, setCurrentFile] = useState<ImageFile | null>(null);
   const [editPrompt, setEditPrompt] = useState("");
@@ -59,7 +58,7 @@ export default function App() {
         const constraints = {
           video: { 
             facingMode: { ideal: facingMode },
-            width: { ideal: 1280 }, // Using a slightly more common ideal for broad mobile support
+            width: { ideal: 1280 },
             height: { ideal: 720 }
           },
           audio: false 
@@ -123,7 +122,6 @@ export default function App() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Ensure capture matches the mirrored preview for front camera
     if (facingMode === 'user') {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
@@ -247,14 +245,10 @@ export default function App() {
   
   const deleteHistoryItem = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    // In many app wrappers/webviews, window.confirm is blocked or behaves poorly.
-    // To ensure "workability" as requested, we perform the action directly or use a UI-based confirmation.
-    // For "strict" design adherence, we simply make the action reliable.
     setHistory(prev => prev.filter(item => item.id !== id));
   };
 
   const clearAllHistory = () => {
-    // Directly clear as confirmed by user in previous request for workable delete functionality.
     setHistory([]);
   };
 
@@ -305,7 +299,8 @@ export default function App() {
           {/* High-Impact HUD Frame */}
           {!cameraError && appState === AppState.IDLE && (
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-              <div className="w-56 h-56 sm:w-64 sm:h-64 border border-white/10 rounded-[3rem] relative mb-24 animate-[pulseScale_4s_infinite_ease-in-out]">
+              <div className="w-56 h-56 sm:w-64 sm:h-64 border border-white/10 rounded-[3rem] relative mb-24 animate-[pulseScale_4s_infinite_ease-in-out] flex items-center justify-center">
+                <i className="fi fi-rr-hand-holding-heart text-5xl text-white/10"></i>
                 <div className="absolute top-0 left-0 w-10 h-10 border-t-[4px] border-l-[4px] border-white rounded-tl-[1.5rem] shadow-[0_0_20px_rgba(255,255,255,0.4)]"></div>
                 <div className="absolute top-0 right-0 w-10 h-10 border-t-[4px] border-r-[4px] border-white rounded-tr-[1.5rem] shadow-[0_0_20px_rgba(255,255,255,0.4)]"></div>
                 <div className="absolute bottom-0 left-0 w-10 h-10 border-b-[4px] border-l-[4px] border-white rounded-bl-[1.5rem] shadow-[0_0_20px_rgba(255,255,255,0.4)]"></div>
@@ -319,7 +314,6 @@ export default function App() {
           <div className="absolute top-0 left-0 right-0 p-5 sm:p-8 z-20 flex justify-between items-center max-w-lg mx-auto w-full">
             <button onClick={() => setShowHistory(true)} className="p-4 sm:p-5 bg-black/40 backdrop-blur-3xl rounded-3xl border border-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90 shadow-2xl"><History className="w-5 h-5 sm:w-6 sm:h-6" /></button>
             
-            {/* Integrated flip functionality into the hardware badge - No redundancy */}
             <div className="px-5 py-2.5 bg-black/40 backdrop-blur-3xl rounded-full border border-white/10 cursor-pointer active:scale-95 transition-all flex items-center gap-3 group" onClick={toggleCamera}>
                <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.4em] group-hover:text-white transition-colors">Cam: <span className="text-white/80">{facingMode === 'environment' ? 'Rear' : 'Front'}</span></span>
                <RefreshCw className="w-3 h-3 text-indigo-500/60 group-hover:rotate-180 transition-transform duration-700" />
@@ -348,8 +342,9 @@ export default function App() {
                  <div className="absolute inset-0 rounded-full border-[2px] border-white/10 scale-125 group-hover:scale-150 transition-all duration-1000 opacity-0 group-hover:opacity-100"></div>
                  <div className="absolute inset-0 rounded-full border-[3px] border-white/20 scale-110 group-hover:scale-125 transition-all duration-700 shadow-[0_0_30px_rgba(255,255,255,0.2)]"></div>
                  <div className="absolute inset-0 rounded-full border-[3px] border-white transition-all duration-300"></div>
-                 <div className="m-2.5 h-[calc(100%-1.25rem)] w-[calc(100%-1.25rem)] rounded-full bg-white group-hover:scale-90 shadow-[0_0_50px_rgba(255,255,255,0.4)] transition-all duration-500 relative overflow-hidden">
+                 <div className="m-2.5 h-[calc(100%-1.25rem)] w-[calc(100%-1.25rem)] rounded-full bg-white group-hover:scale-90 shadow-[0_0_50px_rgba(255,255,255,0.4)] transition-all duration-500 relative overflow-hidden flex items-center justify-center">
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/50 to-transparent animate-[shine_4s_infinite]"></div>
+                    <i className="fi fi-rr-hand-holding-heart text-2xl text-black/20"></i>
                  </div>
                </button>
 
@@ -387,7 +382,10 @@ export default function App() {
               <div className="flex items-center gap-4 sm:gap-6">
                  <div className="h-10 sm:h-14 w-1.5 rounded-full bg-gradient-to-b from-indigo-400 to-indigo-700 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
                  <div>
-                   <h3 className="text-3xl sm:text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Elite Analysis</h3>
+                   <h3 className="text-3xl sm:text-4xl font-black italic uppercase tracking-tighter leading-none mb-1 flex items-center gap-4">
+                     Elite Analysis
+                     <i className="fi fi-rr-hand-holding-heart text-indigo-500 text-2xl sm:text-3xl"></i>
+                   </h3>
                    <p className="text-[8px] sm:text-[10px] font-black text-zinc-600 uppercase tracking-widest">Neural Logic Architecture v5.0</p>
                  </div>
               </div>
@@ -400,6 +398,21 @@ export default function App() {
                    </div>
                  ))}
               </div>
+
+              {currentFile.analysis?.groundingLinks && currentFile.analysis.groundingLinks.length > 0 && (
+                <div className="space-y-4 pt-4">
+                  <h4 className="text-[8px] sm:text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <ExternalLink className="w-3 h-3" /> Grounded Web Intelligence
+                  </h4>
+                  <div className="flex flex-wrap gap-3">
+                    {currentFile.analysis.groundingLinks.map((link, idx) => (
+                      <a key={idx} href={link.uri} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-zinc-900/50 border border-white/5 rounded-xl text-[10px] font-bold text-indigo-400 hover:bg-indigo-600 hover:text-white hover:border-indigo-400 transition-all flex items-center gap-2">
+                        {link.title} <ChevronLeft className="w-3 h-3 rotate-180" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {currentFile.generalChat && currentFile.generalChat.length > 0 && (
                 <div className="space-y-6 sm:space-y-8 pt-10 sm:pt-12 border-t border-white/10">
@@ -454,7 +467,9 @@ export default function App() {
               </div>
               
               <h2 className="text-xl sm:text-2xl font-black italic tracking-tighter uppercase mb-1 drop-shadow-lg">Sayed Mohsin Ali</h2>
-              <p className="text-indigo-400 font-black tracking-[0.4em] text-[8px] sm:text-[9px] uppercase mb-6 sm:mb-8">Systems Developer</p>
+              <p className="text-indigo-400 font-black tracking-[0.4em] text-[8px] sm:text-[9px] uppercase mb-6 sm:mb-8 flex items-center justify-center gap-3">
+                <i className="fi fi-rr-hand-holding-heart text-xs"></i> Systems Developer
+              </p>
               
               <div className="bg-black/50 p-5 sm:p-7 rounded-[2rem] sm:rounded-[2.5rem] mb-8 sm:mb-10 border border-white/5 shadow-inner">
                 <p className="text-zinc-400 text-[10px] sm:text-[12px] leading-relaxed font-medium italic">
@@ -465,7 +480,7 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <a href="https://github.com/gforg5" target="_blank" rel="noreferrer" 
                    className="group/btn flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 bg-zinc-800/80 rounded-xl sm:rounded-2xl text-[8px] sm:text-[10px] font-black uppercase text-white hover:bg-white hover:text-black transition-all shadow-xl border border-white/5 active:scale-95">
-                   <Github className="w-3 h-3 sm:w-4 sm:h-4 group-hover/btn:scale-110 transition-transform" /> 
+                   <Github className="w-3 h-3 sm:w-4 h-4 group-hover/btn:scale-110 transition-transform" /> 
                    <span>Github</span>
                 </a>
                 <a href="https://www.linkedin.com/in/sayedmohsinali/" target="_blank" rel="noreferrer" 
