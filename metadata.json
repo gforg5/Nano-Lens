@@ -1,6 +1,6 @@
 {
-  "name": "Nano Lens fi",
-  "description": "A powerful visual assistant that analyzes your photos and allows for AI-powered image editing using Gemini 2.5.",
+  "name": "Nano Lens",
+  "description": "A powerful visual assistant that analyzes your photos and allows for AI-powered image editing using Gemini.",
   "requestFramePermissions": [
     "camera"
   ]
