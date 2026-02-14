@@ -5,6 +5,7 @@ import { analyzeImage, editImage, analyzeVideo, generalChat } from './services/g
 import { AppState, ImageFile, EditResult, CaptureMode, HistoryItem } from './types';
 import { Button } from './components/Button';
 import { LoadingOverlay } from './components/LoadingOverlay';
+import { SplashScreen } from './components/SplashScreen';
 
 const blobToBase64 = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -16,6 +17,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 };
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [currentFile, setCurrentFile] = useState<ImageFile | null>(null);
@@ -52,7 +54,7 @@ export default function App() {
   useEffect(() => {
     let stream: MediaStream | null = null;
     const startCamera = async () => {
-      if (appState !== AppState.IDLE) return;
+      if (showSplash || appState !== AppState.IDLE) return;
       try {
         setCameraError(false);
         const constraints = {
@@ -96,7 +98,7 @@ export default function App() {
         stream.getTracks().forEach(t => t.stop());
       }
     };
-  }, [appState, facingMode]);
+  }, [appState, facingMode, showSplash]);
 
   const toggleCamera = () => {
     setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
@@ -273,8 +275,12 @@ export default function App() {
     });
   };
 
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
+
   return (
-    <div className="min-h-screen bg-black text-zinc-100 font-sans overflow-hidden relative selection:bg-indigo-500">
+    <div className="min-h-screen bg-black text-zinc-100 font-sans overflow-hidden relative selection:bg-indigo-500 animate-in fade-in duration-1000">
       {appState === AppState.ANALYZING && <LoadingOverlay message="Analyzing..." />}
       {appState === AppState.EDITING && <LoadingOverlay message="Synchronizing Synapses..." />}
 
