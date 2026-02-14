@@ -1,56 +1,91 @@
 import React, { useEffect, useState } from 'react';
 
 export const SplashScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
-  const [stage, setStage] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    const timer1 = setTimeout(() => setStage(1), 500);
-    const timer2 = setTimeout(() => setStage(2), 2500);
-    const timer3 = setTimeout(() => onComplete(), 3200);
+    // Reveal timing
+    const revealTimer = setTimeout(() => setIsVisible(true), 100);
+    // Exit timing
+    const exitTimer = setTimeout(() => setIsExiting(true), 2400);
+    // Completion timing
+    const completeTimer = setTimeout(() => onComplete(), 3000);
 
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
+      clearTimeout(revealTimer);
+      clearTimeout(exitTimer);
+      clearTimeout(completeTimer);
     };
   }, [onComplete]);
 
   return (
-    <div className={`fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center transition-opacity duration-1000 ${stage === 2 ? 'opacity-0' : 'opacity-100'}`}>
-      <div className="relative group">
-        {/* Outer Glow Ring */}
-        <div className={`absolute -inset-24 bg-indigo-500/10 rounded-full blur-[100px] transition-all duration-1000 ${stage >= 1 ? 'scale-150 opacity-100' : 'scale-50 opacity-0'}`}></div>
-        
-        {/* Animated Lens Rings */}
-        <div className="relative flex items-center justify-center">
-          <div className={`w-32 h-32 border-2 border-indigo-500/20 rounded-full transition-all duration-1000 ${stage >= 1 ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}></div>
-          <div className={`absolute w-24 h-24 border-2 border-white/10 rounded-full transition-all duration-[1500ms] ${stage >= 1 ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}></div>
-          <div className={`absolute w-12 h-12 bg-indigo-500 rounded-full shadow-[0_0_40px_rgba(99,102,241,0.8)] transition-all duration-700 delay-300 ${stage >= 1 ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
-             <div className="absolute top-2 left-3 w-2 h-2 bg-white/40 rounded-full"></div>
+    <div className={`fixed inset-0 z-[2000] bg-black flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out ${isExiting ? 'opacity-0 scale-105' : 'opacity-100'}`}>
+      {/* Background Atmosphere */}
+      <div className={`absolute inset-0 bg-gradient-to-b from-indigo-950/10 via-black to-black transition-opacity duration-[1500ms] ${isVisible ? 'opacity-100' : 'opacity-0'}`}></div>
+      
+      {/* Central Identity */}
+      <div className="relative z-10 flex flex-col items-center">
+        {/* Optical Element */}
+        <div className={`relative mb-12 transition-all duration-[1200ms] cubic-bezier(0.2, 0, 0, 1) ${isVisible ? 'scale-100 opacity-100 rotate-0' : 'scale-50 opacity-0 rotate-[-45deg]'}`}>
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border border-white/10 flex items-center justify-center relative overflow-hidden group">
+            {/* Subtle Inner Glow */}
+            <div className="absolute inset-0 bg-indigo-500/5 blur-xl"></div>
+            
+            {/* Aperture Blades Placeholder */}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 sm:w-12 sm:h-12 text-white/80">
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="3" />
+              <path d="M7 2L12.5 7" />
+              <path d="M14 1.5L12.5 7" />
+              <path d="M18 5L15 8.5" />
+              <path d="M22 10L15.5 11" />
+              <path d="M22 14L15.5 13" />
+              <path d="M19 18.5L14 15.5" />
+              <path d="M15 22L12.5 16.5" />
+              <path d="M9 22L11 16.5" />
+              <path d="M5 19L9.5 15" />
+              <path d="M2 15L8.5 13" />
+              <path d="M2 10L8.5 11" />
+              <path d="M5 5L9 8" />
+            </svg>
+            
+            {/* Scanner bar pulse */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-transparent via-indigo-500/20 to-transparent translate-y-full animate-[shimmer_2s_infinite]"></div>
           </div>
           
-          {/* Scanning Line Effect */}
-          <div className={`absolute inset-0 w-48 h-1 bg-gradient-to-r from-transparent via-indigo-400 to-transparent -translate-x-full transition-transform duration-[2000ms] ease-in-out ${stage === 1 ? 'translate-x-full' : ''}`}></div>
+          {/* Radial Pulse */}
+          <div className="absolute -inset-10 border border-indigo-500/10 rounded-full animate-[ping_3s_infinite] opacity-50"></div>
+        </div>
+
+        {/* Text Branding */}
+        <div className="overflow-hidden">
+          <h1 className={`text-3xl sm:text-4xl font-light tracking-[0.6em] text-white transition-all duration-1000 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+            NANO<span className="font-black text-indigo-500">LENS</span>
+          </h1>
+        </div>
+        
+        <div className={`mt-4 overflow-hidden transition-all duration-1000 delay-500 ${isVisible ? 'opacity-40' : 'opacity-0'}`}>
+           <p className="text-[10px] font-medium tracking-[1em] uppercase text-zinc-400">Precision Vision</p>
         </div>
       </div>
 
-      <div className="mt-16 text-center">
-        <h1 className={`text-4xl sm:text-5xl font-black italic tracking-[0.2em] transition-all duration-1000 delay-500 ${stage >= 1 ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-          NANO <span className="text-indigo-500">LENS</span>
-        </h1>
-        <p className={`mt-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.6em] transition-all duration-1000 delay-700 ${stage >= 1 ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
-          Hyper-Visual Intelligence
-        </p>
+      {/* Exit Loading State */}
+      <div className={`absolute bottom-24 w-32 h-[1px] bg-white/5 transition-opacity duration-500 delay-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="h-full bg-indigo-500 animate-[loading_2s_ease-in-out]"></div>
       </div>
 
-      {/* Modern Loader Bar */}
-      <div className={`absolute bottom-20 left-1/2 -translate-x-1/2 w-48 h-0.5 bg-zinc-900 rounded-full overflow-hidden transition-all duration-500 delay-1000 ${stage >= 1 ? 'opacity-100' : 'opacity-0'}`}>
-        <div className={`h-full bg-indigo-500 transition-all duration-[2000ms] ease-out ${stage >= 1 ? 'w-full' : 'w-0'}`}></div>
-      </div>
-
-      <div className={`absolute bottom-8 text-[8px] font-black text-zinc-800 uppercase tracking-widest transition-opacity duration-500 ${stage >= 1 ? 'opacity-100' : 'opacity-0'}`}>
-        Version 5.0.4 PRO
-      </div>
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(100%); }
+        }
+        @keyframes loading {
+          0% { width: 0; left: 0; }
+          50% { width: 100%; left: 0; }
+          100% { width: 0; left: 100%; }
+        }
+      `}</style>
     </div>
   );
 };

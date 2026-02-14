@@ -4,56 +4,41 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>Nano Lens</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236366f1;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%234f46e5;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='12' cy='12' r='11' fill='black'/%3E%3Ccircle cx='12' cy='12' r='10' stroke='url(%23grad)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='12' cy='12' r='4' fill='url(%23grad)'/%3E%3Ccircle cx='13.5' cy='10.5' r='1' fill='white' fill-opacity='0.8'/%3E%3C/svg%3E" />
-    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      /* Prevent browser zoom and improve mobile experience */
       html, body {
         touch-action: manipulation;
         overscroll-behavior: none;
         -webkit-text-size-adjust: none;
         user-select: none;
         background-color: #000;
+        margin: 0;
+        padding: 0;
       }
-      /* Custom Scrollbar */
       ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 0px;
+        background: transparent;
       }
-      ::-webkit-scrollbar-track {
-        background: #09090b; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #27272a; 
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #3f3f46; 
-      }
-      .fade-in {
-        animation: fadeIn 0.5s ease-in-out;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+      .font-space {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "jspdf": "https://esm.sh/jspdf@^3.0.4",
-    "vite": "https://esm.sh/vite@^7.3.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
-  }
-}
-</script>
-</head>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+        "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+        "jspdf": "https://esm.sh/jspdf@^3.0.4",
+        "vite": "https://esm.sh/vite@^7.3.0",
+        "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+      }
+    }
+    </script>
+  </head>
   <body class="bg-black text-zinc-100 antialiased overflow-x-hidden selection:bg-indigo-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
